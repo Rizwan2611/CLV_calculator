@@ -1,0 +1,36 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# C++ files
+*.cpp text
+*.hpp text
+*.h text
+
+# Script files
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# Web files
+*.html text
+*.css text
+*.js text
+*.json text
+
+# Documentation
+*.md text
+*.txt text
+
+# Binary files (should not be modified)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.dll binary
+*.exe binary
+*.so binary
+*.dylib binary

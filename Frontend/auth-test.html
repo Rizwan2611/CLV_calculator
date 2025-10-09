@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Data Logging Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn.success {
+            background: #28a745;
+        }
+        .btn.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #007bff;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .log-entry {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .json-display {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Authentication Data Logging System Test</h1>
+        <p>This page demonstrates the live authentication data logging system that captures signup and login events.</p>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalEvents">-</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="signups">-</div>
+                <div class="stat-label">Signups</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="logins">-</div>
+                <div class="stat-label">Logins</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="uniqueUsers">-</div>
+                <div class="stat-label">Unique Users</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📊 Test Authentication Events</h2>
+        <p>Click the buttons below to simulate authentication events:</p>
+        
+        <button class="btn" onclick="simulateLogin()">Simulate Login</button>
+        <button class="btn success" onclick="simulateSignup()">Simulate Signup</button>
+        <button class="btn" onclick="simulateGoogleAuth()">Simulate Google Auth</button>
+        <button class="btn warning" onclick="refreshStats()">Refresh Statistics</button>
+        <button class="btn" onclick="viewLogs()">View Recent Logs</button>
+        <button class="btn" onclick="exportCSV()">Export CSV</button>
+        
+        <div id="status" style="margin-top: 15px;"></div>
+    </div>
+
+    <div class="container">
+        <h2>📈 Live Statistics</h2>
+        <div id="statsDisplay" class="json-display">Click "Refresh Statistics" to load current data...</div>
+    </div>
+
+    <div class="container">
+        <h2>📋 Recent Authentication Logs</h2>
+        <div id="logsDisplay" class="json-display">Click "View Recent Logs" to load recent authentication events...</div>
+    </div>
+
+    <script>
+        // Utility functions
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<span class="status ${type}">${message}</span>`;
+            setTimeout(() => statusDiv.innerHTML = '', 3000);
+        }
+
+        function generateRandomUser() {
+            const names = ['John Doe', 'Jane Smith', 'Alice Johnson', 'Bob Wilson', 'Carol Brown', 'David Lee'];
+            const domains = ['example.com', 'test.com', 'demo.org', 'sample.net'];
+            const name = names[Math.floor(Math.random() * names.length)];
+            const email = name.toLowerCase().replace(' ', '.') + '@' + domains[Math.floor(Math.random() * domains.length)];
+            const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            
+            return { name, email, userId };
+        }
+
+        function getDeviceInfo() {
+            const userAgent = navigator.userAgent;
+            let deviceType = 'desktop';
+            let browserName = 'unknown';
+            
+            if (/Mobile|Android|iPhone|iPad/.test(userAgent)) {
+                deviceType = 'mobile';
+            } else if (/Tablet|iPad/.test(userAgent)) {
+                deviceType = 'tablet';
+            }
+            
+            if (userAgent.includes('Chrome')) browserName = 'chrome';
+            else if (userAgent.includes('Firefox')) browserName = 'firefox';
+            else if (userAgent.includes('Safari')) browserName = 'safari';
+            else if (userAgent.includes('Edge')) browserName = 'edge';
+            
+            return { deviceType, browserName };
+        }
+
+        // Simulate authentication events
+        async function simulateLogin() {
+            const user = generateRandomUser();
+            const deviceInfo = getDeviceInfo();
+            
+            const authEvent = {
+                userId: user.userId,
+                email: user.email,
+                displayName: user.name,
+                eventType: 'login',
+                provider: 'email',
+                timestamp: new Date().toISOString(),
+                sessionId: 'session_' + Date.now(),
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                deviceType: deviceInfo.deviceType,
+                browserName: deviceInfo.browserName,
+                currentUrl: window.location.href,
+                isNewUser: 'false'
+            };
+
+            try {
+                const response = await fetch('http://localhost:8080/api/log-auth', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(authEvent)
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showStatus(`✅ Login event logged for ${user.email}`, 'success');
+                    await refreshStats();
+                } else {
+                    showStatus(`❌ Failed to log login event`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function simulateSignup() {
+            const user = generateRandomUser();
+            const deviceInfo = getDeviceInfo();
+            
+            const authEvent = {
+                userId: user.userId,
+                email: user.email,
+                displayName: user.name,
+                eventType: 'signup',
+                provider: 'email',
+                timestamp: new Date().toISOString(),
+                sessionId: 'session_' + Date.now(),
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                deviceType: deviceInfo.deviceType,
+                browserName: deviceInfo.browserName,
+                currentUrl: window.location.href,
+                isNewUser: 'true'
+            };
+
+            try {
+                const response = await fetch('http://localhost:8080/api/log-auth', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(authEvent)
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showStatus(`✅ Signup event logged for ${user.email}`, 'success');
+                    await refreshStats();
+                } else {
+                    showStatus(`❌ Failed to log signup event`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function simulateGoogleAuth() {
+            const user = generateRandomUser();
+            const deviceInfo = getDeviceInfo();
+            
+            const authEvent = {
+                userId: user.userId,
+                email: user.email,
+                displayName: user.name,
+                eventType: Math.random() > 0.5 ? 'signup' : 'login',
+                provider: 'google',
+                timestamp: new Date().toISOString(),
+                sessionId: 'session_' + Date.now(),
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                deviceType: deviceInfo.deviceType,
+                browserName: deviceInfo.browserName,
+                currentUrl: window.location.href,
+                isNewUser: Math.random() > 0.5 ? 'true' : 'false'
+            };
+
+            try {
+                const response = await fetch('http://localhost:8080/api/log-auth', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(authEvent)
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showStatus(`✅ Google ${authEvent.eventType} event logged for ${user.email}`, 'success');
+                    await refreshStats();
+                } else {
+                    showStatus(`❌ Failed to log Google auth event`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Refresh statistics
+        async function refreshStats() {
+            try {
+                const response = await fetch('http://localhost:8080/api/auth-stats');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    const stats = result.authStatistics;
+                    
+                    // Update stat cards
+                    document.getElementById('totalEvents').textContent = stats.totalEvents;
+                    document.getElementById('signups').textContent = stats.signups;
+                    document.getElementById('logins').textContent = stats.logins;
+                    document.getElementById('uniqueUsers').textContent = stats.uniqueUsers;
+                    
+                    // Update stats display
+                    document.getElementById('statsDisplay').textContent = JSON.stringify(stats, null, 2);
+                    
+                    showStatus('📊 Statistics refreshed', 'success');
+                } else {
+                    showStatus('❌ Failed to load statistics', 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // View recent logs
+        async function viewLogs() {
+            try {
+                const response = await fetch('http://localhost:8080/api/auth-logs');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    document.getElementById('logsDisplay').textContent = JSON.stringify(result.authLogs, null, 2);
+                    showStatus(`📋 Loaded ${result.totalEvents} recent logs`, 'success');
+                } else {
+                    showStatus('❌ Failed to load logs', 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Export CSV
+        async function exportCSV() {
+            try {
+                const response = await fetch('http://localhost:8080/api/auth-export');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showStatus(`📁 CSV exported: ${result.filename}`, 'success');
+                } else {
+                    showStatus('❌ Failed to export CSV', 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Load initial statistics
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshStats();
+        });
+    </script>
+</body>
+</html>

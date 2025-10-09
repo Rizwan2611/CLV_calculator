@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Compare Scenarios — CLV Calculator</title>
+    <meta name="description" content="Compare different CLV scenarios side-by-side." />
+    <style>
+        :root {
+            --radius: 12px;
+            --gap: 14px;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        /* 🌚 Dark Mode Theme */
+        body.dark-mode {
+            --bg: #121212;
+            --bg-gradient-start: #121212;
+            --bg-gradient-end: #101010;
+            --card: #1E1E1E;
+            --text: #B0B0B0;
+            --text-strong: #FFFFFF;
+            --muted: #8E8E8E;
+            --accent: #00B4D8;
+            --accent-light: #06D6A0;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-hover: rgba(255, 255, 255, 0.08);
+            --border-color: #2C2C2C;
+            --input-hover-border: rgba(255, 255, 255, 0.2);
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --btn-text: #121212;
+            --success: #4ADE80;
+            --error: #FF6B6B;
+        }
+
+        /* 🌞 Light Mode Theme */
+        body.light-mode {
+            --bg: #F8F9FA;
+            --bg-gradient-start: #F8F9FA;
+            --bg-gradient-end: #F1F3F5;
+            --card: #FFFFFF;
+            --text: #495057;
+            --text-strong: #212529;
+            --muted: #6C757D;
+            --accent: #0077B6;
+            --accent-light: #009688;
+            --glass: rgba(33, 37, 41, 0.05);
+            --glass-hover: rgba(33, 37, 41, 0.08);
+            --border-color: #DEE2E6;
+            --input-hover-border: #ADB5BD;
+            --shadow-color: rgba(33, 37, 41, 0.1);
+            --btn-text: #FFFFFF;
+            --success: #06D6A0;
+            --error: #FF6B6B;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 60%);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .sidebar {
+            width: 92px;
+            background: var(--card);
+            border-right: 1px solid var(--border-color);
+            padding: 18px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .brand {
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            font-size: 13px;
+            margin-bottom: 8px;
+            text-align: center;
+            color: var(--text-strong);
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .nav-button {
+            background: transparent;
+            color: var(--muted);
+            border: 0;
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .18s ease;
+            text-decoration: none;
+        }
+
+        .nav-button:hover {
+            background: var(--glass-hover);
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .nav-button.active {
+            background: linear-gradient(180deg, rgba(124, 92, 255, 0.14), rgba(124, 92, 255, 0.06));
+            color: var(--accent);
+            box-shadow: 0 6px 18px rgba(124, 92, 255, 0.08);
+        }
+
+        body.light-mode .nav-button.active {
+            background: rgba(52, 152, 219, 0.1);
+            box-shadow: 0 6px 18px rgba(52, 152, 219, 0.1);
+        }
+
+        .bottom-cta {
+            margin-top: auto;
+        }
+
+        .small-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all 0.2s ease;
+        }
+
+        .small-btn:hover {
+            color: var(--accent);
+            background: var(--glass);
+            border-color: var(--accent);
+        }
+
+        .main {
+            flex: 1;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 1rem;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-strong);
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            display: grid;
+            place-items: center;
+            color: var(--btn-text);
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            text-decoration: none;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: clamp(16px, 3vw, 24px);
+            box-shadow: 0 6px 20px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
+        .card h3 {
+            margin: 0 0 18px 0;
+            color: var(--text-strong);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 0;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            color: var(--btn-text);
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .2s ease;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .scenario-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-selection label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            background-color: var(--glass);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .scenario-selection label:hover {
+            background-color: var(--glass-hover);
+            border-color: var(--accent);
+        }
+
+        .scenario-selection label:has(input:checked) {
+            background-color: color-mix(in srgb, var(--accent) 15%, transparent);
+            border-color: var(--accent);
+        }
+
+        .scenario-selection input[type="checkbox"] {
+            accent-color: var(--accent);
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        td:first-child {
+            font-weight: 600;
+            color: var(--text-strong);
+        }
+
+        .highlight-better {
+            color: var(--success);
+        }
+
+        @media (max-width:880px) {
+            body {
+                flex-direction: column;
+                padding-bottom: 92px;
+            }
+
+            .main {
+                padding: 18px;
+            }
+
+            .sidebar {
+                flex-direction: row;
+                width: auto;
+                height: 72px;
+                position: fixed;
+                bottom: 12px;
+                left: 12px;
+                right: 12px;
+                border-radius: 16px;
+                padding: 8px 12px;
+                z-index: 40;
+                backdrop-filter: blur(10px);
+                background: color-mix(in srgb, var(--card) 80%, transparent);
+            }
+
+            .nav {
+                flex-direction: row;
+                justify-content: space-around;
+            }
+
+            .brand,
+            .bottom-cta {
+                display: none;
+            }
+
+            table {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+
+<body class="dark-mode">
+    <aside class="sidebar" role="navigation" aria-label="Main navigation">
+        <div class="brand" title="CLV Metrics">CLV Metrics</div>
+        <nav class="nav" aria-label="Primary">
+            <a href="index.html" class="nav-button" title="Home"><svg width="22" height="22" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg></a>
+            <a href="calculator.html" class="nav-button" title="Calculator"><svg width="22" height="22"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                    <line x1="8" y1="6" x2="16" y2="6"></line>
+                    <line x1="8" y1="10" x2="16" y2="10"></line>
+                    <line x1="8" y1="14" x2="16" y2="14"></line>
+                    <line x1="8" y1="18" x2="12" y2="18"></line>
+                </svg></a>
+            <a href="dashboard.html" class="nav-button" title="Dashboard"><svg width="22" height="22"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M3 3v18h18"></path>
+                    <path d="M18.37 12.63L13 7l-3 4-4-2-2 3"></path>
+                </svg></a>
+            <a href="data.html" class="nav-button" title="Saved Data"><svg width="22" height="22" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                </svg></a>
+            <a href="compare.html" class="nav-button" title="Compare Scenarios"><svg width="22" height="22"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M20 17H4M4 17l4-4M4 17l4 4M4 7h16M20 7l-4-4M20 7l-4 4" />
+                </svg></a>
+            <a href="settings.html" class="nav-button" title="Settings"><svg width="22" height="22"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V12a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg></a>
+            <a href="help.html" class="nav-button" title="Help"><svg width="22" height="22" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg></a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <header>
+            <div>
+                <h1 class="title">Compare Scenarios</h1>
+                <div class="subtitle">Analyze different outcomes side-by-side.</div>
+            </div>
+            <div class="header-actions">
+                <button class="small-btn" id="themeBtn" title="Toggle Theme">
+                    <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="theme-icon-sun" style="display:none;" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <a href="profile.html" class="user-avatar" title="Profile">R</a>
+            </div>
+        </header>
+        <div class="card">
+            <h3>Select Scenarios to Compare</h3>
+            <div class="scenario-selection">
+                <label><input type="checkbox" id="scenario1" value="High-Value Customers" checked> High-Value Customers</label>
+                <label><input type="checkbox" id="scenario2" value="Subscription Model Test" checked> Subscription Model Test</label>
+                <label><input type="checkbox" id="scenario3" value="Low Margin Segment"> Low Margin Segment</label>
+                <label><input type="checkbox" id="scenario4" value="Enterprise Clients"> Enterprise Clients</label>
+            </div>
+            <button class="btn" id="updateComparison">Update Comparison</button>
+        </div>
+        <div class="card">
+            <h3>Comparison Results</h3>
+            <div id="comparisonMessage" style="text-align: center; padding: 20px; color: var(--muted); display: none;">
+                Please select at least 2 scenarios to compare.
+            </div>
+            <div id="comparisonTable" style="overflow-x:auto;">
+                <table>
+                    <thead id="tableHead">
+                        <tr>
+                            <th>Metric</th>
+                            <th>High-Value Customers</th>
+                            <th>Subscription Model Test</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td>Avg. Order Value</td>
+                            <td>₹8,000</td>
+                            <td>₹1,500</td>
+                        </tr>
+                        <tr>
+                            <td>Purchase Frequency</td>
+                            <td>6 / year</td>
+                            <td>12 / year</td>
+                        </tr>
+                        <tr>
+                            <td>Customer Lifespan</td>
+                            <td>5 years</td>
+                            <td>3 years</td>
+                        </tr>
+                        <tr>
+                            <td>Gross Margin</td>
+                            <td>70%</td>
+                            <td>85%</td>
+                        </tr>
+                        <tr>
+                            <td>Acquisition Cost (CAC)</td>
+                            <td>₹5,000</td>
+                            <td>₹2,000</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Net CLV</strong></td>
+                            <td class="highlight-better"><strong>₹1,63,000</strong></td>
+                            <td><strong>₹43,900</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const get = (id) => document.getElementById(id);
+            const query = (sel) => document.querySelectorAll(sel);
+
+            // Theme
+            const applyTheme = (isDark) => {
+                document.body.classList.toggle('dark-mode', isDark);
+                document.body.classList.toggle('light-mode', !isDark);
+                get('theme-icon-moon').style.display = isDark ? 'block' : 'none';
+                get('theme-icon-sun').style.display = isDark ? 'none' : 'block';
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            };
+            applyTheme(localStorage.getItem('theme') !== 'light');
+            get('themeBtn')?.addEventListener('click', () => applyTheme(!document.body.classList.contains('dark-mode')));
+
+            // Navigation
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            query('.nav-button').forEach(link => {
+                if (link.getAttribute('href').endsWith(currentPage)) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Scenario data
+            const scenarioData = {
+                'High-Value Customers': {
+                    avgOrderValue: 8000,
+                    frequency: 6,
+                    lifespan: 5,
+                    margin: 70,
+                    cac: 5000
+                },
+                'Subscription Model Test': {
+                    avgOrderValue: 1500,
+                    frequency: 12,
+                    lifespan: 3,
+                    margin: 85,
+                    cac: 2000
+                },
+                'Low Margin Segment': {
+                    avgOrderValue: 3500,
+                    frequency: 4,
+                    lifespan: 2,
+                    margin: 45,
+                    cac: 1500
+                },
+                'Enterprise Clients': {
+                    avgOrderValue: 25000,
+                    frequency: 3,
+                    lifespan: 7,
+                    margin: 60,
+                    cac: 15000
+                }
+            };
+
+            // Calculate CLV
+            const calculateCLV = (data) => {
+                const revenue = data.avgOrderValue * data.frequency * data.lifespan;
+                const profit = revenue * (data.margin / 100);
+                return profit - data.cac;
+            };
+
+            // Format currency
+            const formatCurrency = (amount) => {
+                return new Intl.NumberFormat('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    maximumFractionDigits: 0
+                }).format(amount);
+            };
+
+            // Update comparison
+            const updateComparison = () => {
+                const checkboxes = query('.scenario-selection input[type="checkbox"]');
+                const selected = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.value);
+
+                const comparisonTable = get('comparisonTable');
+                const comparisonMessage = get('comparisonMessage');
+                const tableHead = get('tableHead');
+                const tableBody = get('tableBody');
+
+                if (selected.length < 2) {
+                    comparisonTable.style.display = 'none';
+                    comparisonMessage.style.display = 'block';
+                    return;
+                }
+
+                comparisonTable.style.display = 'block';
+                comparisonMessage.style.display = 'none';
+
+                // Build table header
+                let headerHTML = '<tr><th>Metric</th>';
+                selected.forEach(scenario => {
+                    headerHTML += `<th>${scenario}</th>`;
+                });
+                headerHTML += '</tr>';
+                tableHead.innerHTML = headerHTML;
+
+                // Build table body
+                let bodyHTML = '';
+                
+                // Avg Order Value
+                bodyHTML += '<tr><td>Avg. Order Value</td>';
+                selected.forEach(scenario => {
+                    bodyHTML += `<td>${formatCurrency(scenarioData[scenario].avgOrderValue)}</td>`;
+                });
+                bodyHTML += '</tr>';
+
+                // Purchase Frequency
+                bodyHTML += '<tr><td>Purchase Frequency</td>';
+                selected.forEach(scenario => {
+                    bodyHTML += `<td>${scenarioData[scenario].frequency} / year</td>`;
+                });
+                bodyHTML += '</tr>';
+
+                // Customer Lifespan
+                bodyHTML += '<tr><td>Customer Lifespan</td>';
+                selected.forEach(scenario => {
+                    bodyHTML += `<td>${scenarioData[scenario].lifespan} years</td>`;
+                });
+                bodyHTML += '</tr>';
+
+                // Gross Margin
+                bodyHTML += '<tr><td>Gross Margin</td>';
+                selected.forEach(scenario => {
+                    bodyHTML += `<td>${scenarioData[scenario].margin}%</td>`;
+                });
+                bodyHTML += '</tr>';
+
+                // CAC
+                bodyHTML += '<tr><td>Acquisition Cost (CAC)</td>';
+                selected.forEach(scenario => {
+                    bodyHTML += `<td>${formatCurrency(scenarioData[scenario].cac)}</td>`;
+                });
+                bodyHTML += '</tr>';
+
+                // Net CLV
+                bodyHTML += '<tr><td><strong>Net CLV</strong></td>';
+                const clvValues = selected.map(scenario => calculateCLV(scenarioData[scenario]));
+                const maxCLV = Math.max(...clvValues);
+                
+                selected.forEach((scenario, index) => {
+                    const clv = clvValues[index];
+                    const isHighest = clv === maxCLV && selected.length > 1;
+                    const className = isHighest ? 'highlight-better' : '';
+                    bodyHTML += `<td class="${className}"><strong>${formatCurrency(clv)}</strong></td>`;
+                });
+                bodyHTML += '</tr>';
+
+                tableBody.innerHTML = bodyHTML;
+            };
+
+            // Add event listener to button
+            get('updateComparison')?.addEventListener('click', () => {
+                updateComparison();
+                if (window.Toast) {
+                    Toast.success('Comparison updated successfully!', 2000);
+                }
+            });
+
+            // Initial comparison
+            updateComparison();
+        });
+    </script>
+</body>
+
+</html>
